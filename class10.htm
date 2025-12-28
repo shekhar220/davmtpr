@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Class X IT Exam – Writer</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #eef1f4;
+}
+
+.exam-container {
+    width: 750px;
+    margin: 30px auto;
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.15);
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.header p {
+    margin: 3px 0;
+    font-weight: bold;
+}
+
+.timer {
+    text-align: right;
+    font-weight: bold;
+    color: red;
+}
+
+.option {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 8px 0;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.option.correct {
+    background-color: #c8f7c5;
+    border-color: green;
+}
+
+.option.wrong {
+    background-color: #f7c5c5;
+    border-color: red;
+}
+
+.buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+button {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #007BFF;
+    color: white;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+#resultBox {
+    text-align: center;
+    font-weight: bold;
+    margin-top: 20px;
+    font-size: 16px;
+}
+
+.start-screen {
+    text-align: center;
+}
+</style>
+</head>
+
+<body>
+
+<div class="exam-container">
+
+<!-- START SCREEN -->
+<div class="start-screen" id="startScreen">
+    <h2>Online Examination</h2>
+    <p>Class: X</p>
+    <p>Subject: Information Technology (402)</p>
+    <p>Topic: Writer (Word Processing)</p>
+    <p><b>Instruction:</b> Exam will run in full-screen mode.</p>
+    <button onclick="startExam()">Start Exam</button>
+</div>
+
+<!-- EXAM SCREEN -->
+<div id="examScreen" style="display:none;">
+
+    <div class="header">
+        <h2>Online Examination</h2>
+        <p>Class: X | Subject: IT (402)</p>
+        <p>Topic: Writer</p>
+        <div class="timer">Time Left: <span id="time">10:00</span></div>
+    </div>
+
+    <hr>
+
+    <div id="questionBox"></div>
+    <div id="optionsBox"></div>
+
+    <div class="buttons">
+        <button onclick="prevQuestion()">Back</button>
+        <button onclick="nextQuestion()">Next</button>
+    </div>
+
+    <div id="resultBox"></div>
+
+</div>
+</div>
+
+<script>
+/* ============ FULLSCREEN ============ */
+function startExam() {
+    let elem = document.documentElement;
+    if (elem.requestFullscreen) elem.requestFullscreen();
+    else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+    else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+
+    document.getElementById("startScreen").style.display = "none";
+    document.getElementById("examScreen").style.display = "block";
+    startTimer();
+    loadQuestion();
+}
+
+/* ============ TIMER ============ */
+let time = 600; // 10 minutes
+let timer;
+
+function startTimer() {
+    timer = setInterval(() => {
+        let min = Math.floor(time / 60);
+        let sec = time % 60;
+        document.getElementById("time").innerText =
+            min + ":" + (sec < 10 ? "0" + sec : sec);
+        time--;
+        if (time < 0) {
+            clearInterval(timer);
+            finishExam();
+        }
+    }, 1000);
+}
+
+/* ============ QUESTIONS (10) ============ */
+let quiz = [
+ {q:"Writer is an example of:", o:["Spreadsheet software","Presentation software","Word processing software","Database software"], a:2},
+ {q:"Shortcut key to save a document is:", o:["Ctrl + P","Ctrl + S","Ctrl + A","Ctrl + Z"], a:1},
+ {q:"Default file extension of Writer is:", o:[".doc",".xls",".odt",".ppt"], a:2},
+ {q:"Menu used to insert a table is:", o:["File","Insert","Tools","Format"], a:1},
+ {q:"Ctrl + B is used for:", o:["Italic","Underline","Bold","Superscript"], a:2},
+ {q:"Which alignment adjusts text on both sides?", o:["Left","Right","Center","Justify"], a:3},
+ {q:"Which tool checks spelling errors?", o:["Thesaurus","AutoText","Spell Check","Replace"], a:2},
+ {q:"Header and Footer are inserted from:", o:["Insert menu","View menu","Format menu","Tools menu"], a:0},
+ {q:"Which tool copies formatting?", o:["Styles","Format Painter","Templates","AutoCorrect"], a:1},
+ {q:"Page orientation is changed using:", o:["Format → Character","Insert → Page","Format → Page Style","Tools → Options"], a:2}
+];
+
+/* ============ RANDOMIZE ============ */
+quiz.sort(() => Math.random() - 0.5);
+
+let current = 0;
+let score = 0;
+let attempted = Array(quiz.length).fill(false);
+
+/* ============ LOGIC ============ */
+function loadQuestion() {
+    document.getElementById("questionBox").innerHTML =
+        "<b>Question " + (current + 1) + " of " + quiz.length + ":</b> " + quiz[current].q;
+
+    let html = "";
+    quiz[current].o.forEach((opt, i) => {
+        html += `<div class="option" onclick="checkAnswer(this, ${i})">${opt}</div>`;
+    });
+    document.getElementById("optionsBox").innerHTML = html;
+}
+
+function checkAnswer(el, i) {
+    if (attempted[current]) return;
+
+    let options = document.querySelectorAll(".option");
+    options[quiz[current].a].classList.add("correct");
+
+    if (i !== quiz[current].a) {
+        el.classList.add("wrong");
+    } else {
+        score++;
+    }
+    attempted[current] = true;
+}
+
+function nextQuestion() {
+    if (current < quiz.length - 1) {
+        current++;
+        loadQuestion();
+    } else {
+        finishExam();
+    }
+}
+
+function prevQuestion() {
+    if (current > 0) {
+        current--;
+        loadQuestion();
+    }
+}
+
+function finishExam() {
+    clearInterval(timer);
+    document.getElementById("resultBox").innerHTML =
+        "Exam Completed<br>Final Score: " + score + " / " + quiz.length;
+}
+</script>
+
+</body>
+</html>
